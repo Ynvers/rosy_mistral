@@ -150,6 +150,6 @@ if 'messages' not in st.session_state:
     st.session_state.messages = [] 
 
 if user_input:
-    response = agent.invoke({"input": user_input, "chat_history": memory.load_memory_variables({})["chat_history"]})["output"]
-    st.session_state.messages.append({"sender": "Utilisateur", "message": user_input})
-    st.session_state.messages.append({"sender": "Rosy", "message": response})
+    response = get_response(user_input)
+    st.write("Réponse :")
+    st.write(response)
