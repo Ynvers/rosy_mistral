@@ -5,4 +5,8 @@ langchain
 faiss-cpu
 langchain-google-genai
 langchain-community
+<<<<<<< HEAD
 langchain
+=======
+langchain-mistralai
+>>>>>>> 7451e84bc409bc7a078d10fa3236438255081e22
