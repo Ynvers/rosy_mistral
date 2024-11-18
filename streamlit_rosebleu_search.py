@@ -152,11 +152,20 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-user_input = st.text_input("Posez une question")
-
-
-if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    response = agent_chain.invoke({"input": user_input})["output"]
+if prompt := st.chat_input("Posez une question"):
+    # Add user message to chat history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    
+    # Display user message
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    
+    # Generate and display assistant response
+    with st.chat_message("assistant"):
+        with st.spinner("Rosy réfléchit..."):
+            # Assuming agent_chain.invoke is your response generation function
+            response = agent_chain.invoke({"input": prompt})["output"]
+            st.markdown(response)
+    
+    # Add assistant response to chat history
     st.session_state.messages.append({"role": "assistant", "content": response})
-  
