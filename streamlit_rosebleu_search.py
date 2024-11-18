@@ -151,5 +151,4 @@ if 'messages' not in st.session_state:
 
 if user_input:
     response = agent_chain.invoke({"input": user_input})["output"]
-    st.write("Réponse :")
     st.write(response)
