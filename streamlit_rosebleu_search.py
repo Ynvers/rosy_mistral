@@ -131,7 +131,7 @@ prompt = PromptTemplate.from_template(character_prompt)
 
 agent = create_react_agent(chat_model, tools, prompt)
 
-memory = ConversationBufferWindowMemory(k=5, memory_key="chat_history", return_messages=True, output_key="output")
+memory = ConversationBufferWindowMemory(k=6, memory_key="chat_history", return_messages=True, output_key="output")
 
 agent_chain = AgentExecutor(agent=agent,
                             tools=tools,
@@ -150,22 +150,38 @@ st.write("Mais sur toute autre maladie en générale, **Rosy** y répondra ;)")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.write(message["content"])
+         st.markdown(f"{message['role'].capitalize()} : {message['content']}")
+
+def respond_with_context(prompt):
+    """
+    Génère une réponse en utilisant le contexte des messages précédents.
+    
+    Args:
+        prompt (str): La nouvelle question de l'utilisateur
+    
+    Returns:
+        str: La réponse de l'assistant prenant en compte le contexte
+    """
+    # Récupérer les 5 derniers messages de la mémoire
+    chat_history = st.session_state.messages
+
+    # Concaténer les messages précédents avec la nouvelle question
+    full_prompt = "\n".join([
+        f"{msg['role'].capitalize()} : {msg['content']}" for msg in chat_history
+    ]) + f"\nUtilisateur : {prompt}"
+
+    # Générer la réponse en utilisant le prompt complet
+    response = agent_chain.invoke({"input": full_prompt})["output"]
+
+    # Ajouter la nouvelle interaction à l'historique
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+    return response
 
 if prompt := st.chat_input("Posez une question"):
-    # Add user message to chat history
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    # Display user message
     with st.chat_message("user"):
         st.markdown(prompt)
-    
-    # Generate and display assistant response
+    response = respond_with_context(prompt)
     with st.chat_message("assistant"):
-        with st.spinner("Rosy réfléchit..."):
-            # Assuming agent_chain.invoke is your response generation function
-            response = agent_chain.invoke({"input": prompt})["output"]
-            st.markdown(response)
-    
-    # Add assistant response to chat history
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        st.markdown(response)
