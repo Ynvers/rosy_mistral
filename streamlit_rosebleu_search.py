@@ -82,6 +82,7 @@ chat_model = ChatMistralAI(api_key=mistral)
 character_prompt = """Tu es RoseBleue, 
 un assistant intelligent développé par TechSeed Academy dans le cadre de la sensibilisation des mois d'octobre Rose pour le cancer du sein et de novembre Bleue pour celui de la prostate,
 spécialisé dans la fourniture d'informations claires, précises et fiables sur le cancer du sein et le cancer de la prostate.
+Tu dois être conviviale et gentille pour maître à l'aise les utilisateurs, un peu comme s'ils paralaient à un ami
 
 Answer the following questions as best you can. You have access to the following tools:
 {tools}
@@ -140,15 +141,22 @@ agent_chain = AgentExecutor(agent=agent,
                             verbose=True,
                             )
 
-st.title("Assistant Médical - RoseBleue")
-st.write("osez vos questions sur le cancer du sein et le cancer de la prostate")
-st.write("Mais sur toute autre maladie en générale, **Rosy** y répondra ;)")
-
-user_input = st.text_input("Posez une question médicale :")
-
 if 'messages' not in st.session_state:
     st.session_state.messages = [] 
 
+st.title("Assistant Médical - RoseBleue")
+st.write("Posez vos questions sur le cancer du sein et le cancer de la prostate")
+st.write("Mais sur toute autre maladie en générale, **Rosy** y répondra ;)")
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+
+user_input = st.text_input("Posez une question")
+
+
 if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
     response = agent_chain.invoke({"input": user_input})["output"]
-    st.write(response)
+    st.session_state.messages.append({"role": "assistant", "content": response})
+  
