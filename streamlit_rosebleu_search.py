@@ -131,16 +131,13 @@ prompt = PromptTemplate.from_template(character_prompt)
 
 agent = create_react_agent(chat_model, tools, prompt)
 
-memory = ConversationBufferWindowMemory(k=6, memory_key="chat_history", return_messages=True, output_key="output")
-
 agent_chain = AgentExecutor(agent=agent,
                             tools=tools,
-                            memory=memory,
+                            #memory=memory,
                             max_iterations=5,
                             handle_parsing_errors=True,
                             verbose=True,
                             )
-
 if 'messages' not in st.session_state:
     st.session_state.messages = [] 
 
@@ -162,18 +159,12 @@ def respond_with_context(prompt):
     Returns:
         str: La réponse de l'assistant prenant en compte le contexte
     """
-    # Récupérer les 5 derniers messages de la mémoire
-    chat_history = st.session_state.messages
-
     # Concaténer les messages précédents avec la nouvelle question
-    full_prompt = "\n".join([
-        f"{msg['role'].capitalize()} : {msg['content']}" for msg in chat_history
-    ]) + f"\nUtilisateur : {prompt}"
+    response = agent_chain.invoke({
+        "input": prompt,  # Message actuel
+        "chat_history": st.session_state.messages,  # Historique complet
+    })["output"]
 
-    # Générer la réponse en utilisant le prompt complet
-    response = agent_chain.invoke({"input": full_prompt})["output"]
-
-    # Ajouter la nouvelle interaction à l'historique
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.session_state.messages.append({"role": "assistant", "content": response})
 
