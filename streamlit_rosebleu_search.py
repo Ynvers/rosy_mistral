@@ -160,15 +160,21 @@ def respond_with_context(prompt):
         str: La réponse de l'assistant prenant en compte le contexte
     """
     # Concaténer les messages précédents avec la nouvelle question
-    response = agent_chain.invoke({
-        "input": prompt,  # Message actuel
-        "chat_history": st.session_state.messages,  # Historique complet
-    })["output"]
+    
+    try:
+        response = agent_chain.invoke({
+            "input": prompt,  # Message actuel
+            "chat_history": st.session_state.messages,  # Historique complet
+        })["output"]
 
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.session_state.messages.append({"role": "assistant", "content": response})
-
-    return response
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        return response
+    except httpx.HTTPStatusError as e:
+        st.error(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
+        return "Une erreur est survenue lors de la génération de la réponse."
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {str(e)}")
+        return "Une erreur inattendue est survenue lors de la génération de la réponse."
 
 if prompt := st.chat_input("Posez une question"):
     with st.chat_message("user"):
