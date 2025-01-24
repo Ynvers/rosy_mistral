@@ -1,4 +1,5 @@
 import os
+import httpx
 import streamlit as st
 import google.generativeai as genai
 
@@ -166,7 +167,6 @@ def respond_with_context(prompt):
             "input": prompt,  # Message actuel
             "chat_history": st.session_state.messages,  # Historique complet
         })["output"]
-
         st.session_state.messages.append({"role": "assistant", "content": response})
         return response
     except httpx.HTTPStatusError as e:
