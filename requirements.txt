@@ -7,3 +7,5 @@ langchain-google-genai
 langchain-community
 langchain
 langchain-mistralai
+google-generativeai
+streamlit
