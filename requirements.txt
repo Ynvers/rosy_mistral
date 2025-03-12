@@ -6,4 +6,5 @@ faiss-cpu
 langchain-google-genai
 langchain-community
 langchain
-langchain-mistralai
+langchain-mistralaigoogle-generativeai
+streamlit
