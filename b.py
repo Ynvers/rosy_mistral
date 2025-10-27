@@ -4,17 +4,8 @@ import streamlit as st
 import google.generativeai as genai
 
 from dotenv import load_dotenv
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_core.prompts import ChatPromptTemplate
-from langchain.chains import create_retrieval_chain
-from langchain_community.utilities import GoogleSerperAPIWrapper
-from langchain.agents import Tool, AgentExecutor, create_react_agent
-from langchain import hub
-from langchain.prompts.prompt import PromptTemplate
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
-from langchain_mistralai.chat_models import ChatMistralAI
 
 load_dotenv()
 genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
@@ -44,41 +35,6 @@ system_prompt = (
     "\n\n"
     "{context}"
 )
-
-rag_prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("human", "{input}")
-    ]
-)
-
-doc_chain = create_stuff_documents_chain(llm=ChatGoogleGenerativeAI(model="gemini-pro", temperature=0),
-                                         prompt=rag_prompt
-)
-
-rag_chain = create_retrieval_chain(retriever, doc_chain)
-
-search = GoogleSerperAPIWrapper()
-
-tools = [
-    Tool(
-        name = "Semantic Tool",
-        func = lambda input, **kwargs: rag_chain.invoke(
-            {"input": input, "chat_history": kwargs.get("chat_history", [])}
-        ),
-        description="Utilise les documents locaux pour répondre aux questions médicales basées sur un vector store."
-    ),
-    Tool(
-        name = "Google Search",
-        func=search.run,
-        description="Effectue une recherche sur le web pour répondre aux questions médicales non couvertes par les documents locaux."
-    )
-]
-
-hub.pull("hwchase17/react")
-
-
-chat_model = ChatMistralAI(api_key=mistral)
 
 character_prompt = """Tu es RoseBleue, 
 un assistant intelligent développé par TechSeed Academy dans le cadre de la sensibilisation des mois d'octobre Rose pour le cancer du sein et de novembre Bleue pour celui de la prostate,
@@ -127,58 +83,3 @@ Previous conversation history:
 Question: {input}
 Thought: {agent_scratchpad}
 """
-
-prompt = PromptTemplate.from_template(character_prompt)
-
-agent = create_react_agent(chat_model, tools, prompt)
-
-agent_chain = AgentExecutor(agent=agent,
-                            tools=tools,
-                            #memory=memory,
-                            max_iterations=5,
-                            handle_parsing_errors=True,
-                            verbose=True,
-                            )
-if 'messages' not in st.session_state:
-    st.session_state.messages = [] 
-
-st.title("Assistant Médical - RoseBleue")
-st.write("Posez vos questions sur le cancer du sein et le cancer de la prostate")
-st.write("Mais sur toute autre maladie en générale, **Rosy** y répondra ;)")
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-         st.markdown(f"{message['role'].capitalize()} : {message['content']}")
-
-def respond_with_context(prompt):
-    """
-    Génère une réponse en utilisant le contexte des messages précédents.
-    
-    Args:
-        prompt (str): La nouvelle question de l'utilisateur
-    
-    Returns:
-        str: La réponse de l'assistant prenant en compte le contexte
-    """
-    # Concaténer les messages précédents avec la nouvelle question
-    
-    try:
-        response = agent_chain.invoke({
-            "input": prompt,  # Message actuel
-            "chat_history": st.session_state.messages,  # Historique complet
-        })["output"]
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        return response
-    except httpx.HTTPStatusError as e:
-        st.error(f"HTTP error occurred: {e.response.status_code} - {e.response.text}")
-        return "Une erreur est survenue lors de la génération de la réponse."
-    except Exception as e:
-        st.error(f"An unexpected error occurred: {str(e)}")
-        return "Une erreur inattendue est survenue lors de la génération de la réponse."
-
-if prompt := st.chat_input("Posez une question"):
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    response = respond_with_context(prompt)
-    with st.chat_message("assistant"):
-        st.markdown(response)

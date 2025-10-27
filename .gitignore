@@ -1,1 +1,5 @@
+# Put your environ system there
 venv
+
+#Environ files
+.env

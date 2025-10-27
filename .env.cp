@@ -1,0 +1,3 @@
+GOOGLE_API_KEY=your_google_api_key
+SERPER_API_KEY=your_serper_api_key
+MISTRAL_API_KEY=your_mistral_api_key
