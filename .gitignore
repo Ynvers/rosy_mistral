@@ -1,5 +1,6 @@
 # Put your environ system there
 venv
+rosy
 
 #Environ files
 .env
