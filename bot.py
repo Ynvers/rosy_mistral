@@ -81,9 +81,10 @@ agent = create_agent(
 	system_prompt = system_prompt,
 	checkpointer = checkpointer
 )
-result = agent.invoke(
-    {"messages": [{"role": "user", "content": "Qui es-tu ?"}]},
-    {"configurable": {"thread_id": "1"}}  # Thread ID for conversation tracking
-)
 
-print(result["messages"][-1].content[0]["text"])
+def get_response(query: str) -> str:
+	result = agent.invoke(
+		{"messages": [{"role": "user", "content": query}]},
+		{"configurable": {"thread_id": "1"}}  # Thread ID for conversation tracking
+	)
+	return result["messages"][-1].content[0]["text"]

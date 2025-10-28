@@ -4,3 +4,4 @@ rosy
 
 #Environ files
 .env
+__pycache__
